@@ -1,0 +1,616 @@
+000001        IDENTIFICATION DIVISION.                                         
+000002       *-----------------------                                          
+000003        PROGRAM-ID. GENCPY.                                              
+000004       *AUTHOR.      LUCIANA FALCON.                                     
+000005       *PROGRAMMER.  LUCIANA FALCON.                                     
+000006       *DATE WRITTEN 05-31-2023.                                         
+000007       *---------------------------------------------------------------* 
+000008       * DESCRIPCION: ESTE PROGRAMA GENERA UN JCL A PARTIR DE UN COPY    
+000009       * FAID DE ENTRADA.                                                
+000010       * ORGANIZATION:                                          
+000011       *---------------------------------------------------------------* 
+000012       *                                                                 
+000013       *                                                                 
+000014       *                                                                 
+000015       *                                                                 
+000016       *---------------------------------------------------------------* 
+000017                                                                         
+000018        ENVIRONMENT DIVISION.                                            
+000019       *--------------------                                             
+000020                                                                         
+000021        CONFIGURATION SECTION.                                           
+000022       *---------------------                                            
+000023        SPECIAL-NAMES.                                                   
+000024            DECIMAL-POINT IS COMMA.                                      
+000025                                                                         
+000026        INPUT-OUTPUT SECTION.                                            
+000027       *--------------------                                             
+000028                                                                         
+000029        FILE-CONTROL.                                                    
+000030       *------------                                                     
+000031                                                                         
+000032            SELECT GENCPYI     ASSIGN       TO GENCPYI                   
+000033                               ORGANIZATION IS SEQUENTIAL                
+000034                               ACCESS MODE  IS SEQUENTIAL                
+000035                               FILE STATUS  IS FS-GENCPY.                
+000036       *                                                                 
+000037            SELECT GENCPYO     ASSIGN       TO GENCPYO                   
+000038                               FILE STATUS  IS FS-GENCPY.                
+000039                                                                         
+000040            SELECT JCLIN       ASSIGN       TO JCLIN                     
+000041                               ORGANIZATION IS SEQUENTIAL                
+000042                               ACCESS MODE  IS SEQUENTIAL                
+000043                               FILE STATUS  IS FS-JCLIN.                 
+000044                                                                         
+000045                                                                         
+000046        DATA DIVISION.                                                   
+000047       *-------------                                                    
+000048                                                                         
+000049        FILE SECTION.                                                    
+000050       *------------                                                     
+000051                                                                         
+000052        FD  GENCPYI                                                      
+000053            RECORDING MODE IS F.                                         
+000054        01  REG-GENCPYI                     PIC  X(90).                  
+000055       *01  REG-GENCPYI                     PIC  X(133).                 
+000056                                                                         
+000057        FD  GENCPYO                                                      
+000058            BLOCK CONTAINS 0                                             
+000059            RECORDING MODE IS F.                                         
+000060        01  REG-GENCPYO                     PIC  X(80).                  
+000061                                                                         
+000062        FD  JCLIN                                                        
+000063            RECORDING MODE IS F.                                         
+000064        01  REG-JCLIN                       PIC  X(80).                  
+000065                                                                         
+000066        WORKING-STORAGE SECTION.                                         
+000067       *-----------------------                                          
+000068                                                                         
+000069        77  FS-GENCPY                       PIC X(02)   VALUE ' '.       
+000070            88  FS-GENCPY-OK                            VALUE '00' '97'. 
+000071            88  FS-GENCPY-EOF                           VALUE '10'.      
+000072                                                                         
+000073        77  FS-JCLIN                        PIC X(02)   VALUE ' '.       
+000074            88  FS-JCLIN-OK                             VALUE '00' '97'. 
+000075            88  FS-JCLIN-EOF                            VALUE '10'.      
+000076                                                                         
+000077        01  DATOS-DE-ENTRADA.                                            
+000078            05  WS-ESPACIOS                 PIC  X(18)  VALUE SPACES.    
+000079            05  WS-PIC                      PIC  X(01)  VALUE ' '.       
+000080            05  WS-NOMBRE-CAMPO             PIC  X(30)  VALUE SPACES.    
+000081            05  WS-TYPE                     PIC  X(02)  VALUE SPACES.    
+000082            05  WS-START                    PIC  9(03)  VALUE 0.         
+000083            05  WS-LENGTH                   PIC  9(03)  VALUE 0.         
+000084            05  WS-PIC-SIGN                 PIC  X(01)  VALUE ' '.       
+000085            05  WS-PICTURE                  PIC  X(11)  VALUE SPACES.    
+000086                                                                         
+000087        01  OUTREC-ZN-AN.                                                
+000088            05  WS-ESPACIOS-ZN              PIC  X(18)  VALUE SPACES.    
+000089            05  FILLER                      PIC  X(01)  VALUE ','.       
+000090            05  WS-OUT-START-ZN             PIC  X(03)  VALUE SPACES.    
+000091            05  FILLER                      PIC  X(01)  VALUE ','.       
+000092            05  WS-OUT-LENGTH-ZN            PIC  9(03)  VALUE 0.         
+000093            05  FILLER                      PIC  X(06)  VALUE ",C';'".   
+000094                                                                         
+000095        01  OUTREC-BI-PD-SIGN.                                           
+000096            05  WS-ESPACIOS-PD-S            PIC X(18)   VALUE SPACES.    
+000097            05  FILLER                      PIC X(01)   VALUE ','.       
+000098            05  WS-OUT-START-PD-S           PIC 9(03)   VALUE 0.         
+000099            05  FILLER                      PIC X(01)   VALUE ','.       
+000100            05  WS-OUT-LENGTH-PD-S          PIC 9(03)   VALUE 0.         
+000101            05  FILLER                      PIC X(01)   VALUE ','.       
+000102            05  WS-OUT-TYPE-SIGN-PD-S       PIC X(02)   VALUE SPACES.    
+000103            05  FILLER                      PIC X(08)   VALUE ',EDIT=(S'.
+000104            05  WS-EDIT-SIGN-PD-S.                                       
+000105                10  WS-EDIT-SIGN-PD-S-ENT   PIC X(16)   VALUE SPACES.    
+000106                10  WS-EDIT-SIGN-PD-S-COM   PIC X(01)   VALUE SPACES.    
+000107                10  WS-EDIT-SIGN-PD-S-DEC   PIC X(03)   VALUE SPACES.    
+000108            05  FILLER                      PIC X(07)   VALUE "),C';',". 
+000109            05  FILLER                      PIC X(12)   VALUE            
+000110                                                          "SIGNS=(+,-)". 
+000111        01  OUTREC-BI-PD-NSIGN.                                          
+000112            05  WS-ESPACIOS-PD-NS           PIC X(18)   VALUE SPACES.    
+000113            05  FILLER                      PIC X(01)   VALUE ','.       
+000114            05  WS-OUT-START-PD-NS          PIC 9(03)   VALUE 0.         
+000115            05  FILLER                      PIC X(01)   VALUE ','.       
+000116            05  WS-OUT-LENGTH-PD-NS         PIC X(03)   VALUE SPACES.    
+000117            05  FILLER                      PIC X(01)   VALUE ','.       
+000118            05  WS-OUT-TYPE-SIGN-PD-NS      PIC X(02)   VALUE SPACES.    
+000119            05  FILLER                      PIC X(07)   VALUE ',EDIT=('. 
+000120            05  WS-EDIT-SIGN-PD-NS.                                      
+000121                10  WS-EDIT-SIGN-PD-NS-ENT  PIC X(16)   VALUE SPACES.    
+000122                10  WS-EDIT-SIGN-PD-NS-COM  PIC X(01)   VALUE SPACES.    
+000123                10  WS-EDIT-SIGN-PD-NS-DEC  PIC X(03)   VALUE SPACES.    
+000124            05  FILLER                      PIC X(07)   VALUE "),C';'".  
+000125                                                                         
+000126        01  ST-GENCPY                       PIC X(02).                   
+000127            88  EOF-GENCPYI                             VALUE "10".      
+000128            88  OK-GENCPYI                              VALUE "00".      
+000129                                                                         
+000130        01  ST-JCLIN                        PIC X(02).                   
+000131            88  EOF-JCLIN                               VALUE "10".      
+000132            88  OK-JCLIN                                VALUE "00".      
+000133                                                                         
+000134        01  TOTALES-DE-CONTROL.                                          
+000135            05  WS-LEIDOS-JCLIN             PIC 9(08)   VALUE ZEROS.     
+000136            05  WS-LEIDOS-GENCPYI           PIC 9(08)   VALUE ZEROS.     
+000137            05  WS-GRABADOS-GENCPYO         PIC 9(08)   VALUE ZEROS.     
+000138                                                                         
+000139        01  VARIABLES-AUXILIARES.                                        
+000140            05  WS-REG-GENCPYI-AUX          PIC X(80)   VALUE SPACES.    
+000141            05  WS-RESULTADO                PIC 9(03)   VALUE ZEROS.     
+000142            05  WS-EDIT-SIGN-BI             PIC X(20)   VALUE SPACES.    
+000143            05  WS-EDIT-SIGN-PD             PIC X(20)   VALUE SPACES.    
+000144            05  WS-INICIO-DECIM             PIC 9(02)   VALUE ZEROS.     
+000145                                                                         
+000146        01  WS-FINAL.                                                    
+000147            05  FINAL-SPACES                PIC X(18)   VALUE SPACES.    
+000148            05  FINAL-SIGN                  PIC X(01)   VALUE ')'.       
+000149                                                                         
+000150       * VARIABLES PARA CALCULAR LA CANT DE T QUE VAN EN EL EDIT         
+000151        77  WS-VECTOR-T                     PIC X(16)   VALUE            
+000152                                                  'TTTTTTTTTTTTTTTT'.    
+000153        77  WS-CANT-DECIM                   PIC 9(02)   VALUE 0.         
+000154        01  WS-VALOR-FINAL.                                              
+000155            05  VAL-FIN-ENTERO              PIC X(16)   VALUE SPACES.    
+000156            05  VAL-FIN-COMA                PIC X(01)   VALUE '.'.       
+000157            05  VAL-FIN-DECIM               PIC X(03)   VALUE SPACES.    
+000158        77  WS-VALOR-FINAL-AUX              PIC X(19)   VALUE SPACES.    
+000159        77  WS-VAL-AUX-ENTERO               PIC 9(02)   VALUE 0.         
+000160        77  WS-LONG-MAX-NUM                 PIC 9(02)   VALUE 19.        
+000161        77  WS-LONG-MAX-NUM-ENTERO          PIC 9(02)   VALUE 16.        
+000162        77  WS-LONG-MAX-NUM-AUX             PIC 9(02)   VALUE 0.         
+000163                                                                         
+000164       *---------------------------------------------------------------* 
+000165       *                                                               * 
+000166       *                                                               * 
+000167       *                       PROCEDURE DIVISION                      * 
+000168       *                                                               * 
+000169       *                                                               * 
+000170       *---------------------------------------------------------------* 
+000171                                                                         
+000172        PROCEDURE DIVISION.                                              
+000173       *------------------                                               
+000174                                                                         
+000175       *---------------------------------------------------------------* 
+000176        0000-CUERPO-PRINCIPAL.                                           
+000177       *---------------------------------------------------------------* 
+000178                                                                         
+000179            PERFORM 1000-INICIAR                                         
+000180               THRU 1000-INICIAR-EXIT                                    
+000181                                                                         
+000182            PERFORM 2000-PROCESAR                                        
+000183               THRU 2000-PROCESAR-EXIT                                   
+000184                                                                         
+000185            PERFORM 3000-FINALIZAR                                       
+000186               THRU 3000-FINALIZAR-EXIT                                  
+000187                                                                         
+000188            STOP RUN                                                     
+000189            .                                                            
+000190       *---------------------------------------------------------------* 
+000191        1000-INICIAR.                                                    
+000192       *---------------------------------------------------------------* 
+000193                                                                         
+000194            PERFORM 8100-ABRIR-ARCHIVOS                                  
+000195               THRU 8100-ABRIR-ARCHIVOS-EXIT                             
+000196                                                                         
+000197       *    INITIALIZE TOTALES-DE-CONTROL                                
+000198                                                                         
+000199            PERFORM 8200-LEER-JCLIN                                      
+000200               THRU 8200-LEER-JCLIN-EXIT                                 
+000201            PERFORM 8210-LEER-GENCPYI                                    
+000202               THRU 8210-LEER-GENCPYI-EXIT                               
+000203            .                                                            
+000204       *---------------------------------------------------------------* 
+000205        1000-INICIAR-EXIT.                                               
+000206       *---------------------------------------------------------------* 
+000207                                                                         
+000208       *---------------------------------------------------------------* 
+000209        2000-PROCESAR.                                                   
+000210       *---------------------------------------------------------------* 
+000211                                                                         
+000212            PERFORM 2100-PROCESAR-JCLIN                                  
+000213               THRU 2100-PROCESAR-JCLIN-EXIT                             
+000214              UNTIL EOF-JCLIN                                            
+000215                                                                         
+000216            PERFORM 2150-PROCESAR-GENCPYI                                
+000217               THRU 2150-PROCESAR-GENCPYI-EXIT                           
+000218              UNTIL EOF-GENCPYI                                          
+000219            WRITE   REG-GENCPYO  FROM WS-FINAL                           
+000220            .                                                            
+000221       *---------------------------------------------------------------* 
+000222        2000-PROCESAR-EXIT.                                              
+000223       *---------------------------------------------------------------* 
+000224                                                                         
+000225       *ESCRIBE LA SALIDA A PARTIR DEL JCL DE ENTRADA.                   
+000226       *---------------------------------------------------------------* 
+000227        2100-PROCESAR-JCLIN.                                             
+000228       *---------------------------------------------------------------* 
+000229                                                                         
+000230            WRITE   REG-GENCPYO  FROM REG-JCLIN                          
+000231            PERFORM 8200-LEER-JCLIN                                      
+000232               THRU 8200-LEER-JCLIN-EXIT                                 
+000233            .                                                            
+000234       *---------------------------------------------------------------* 
+000235        2100-PROCESAR-JCLIN-EXIT.                                        
+000236       *---------------------------------------------------------------* 
+000237                                                                         
+000238       *LEO EL ARCHIVO DE ENTRADA Y LLAMO A LOS PROCESOS QUE MUEVEN LOS  
+000239       *DATOS A LA WS.                                                   
+000240       *---------------------------------------------------------------* 
+000241        2150-PROCESAR-GENCPYI.                                           
+000242       *---------------------------------------------------------------* 
+000243                                                                         
+000244            PERFORM 8250-GUARDAR-VARIABLES                               
+000245               THRU 8250-GUARDAR-VARIABLES-EXIT                          
+000246                                                                         
+000247            IF ((WS-TYPE EQUAL 'AN' OR WS-TYPE EQUAL 'ZD')               
+000248                 AND (WS-PIC NOT EQUAL ' '))                             
+000249                                                                         
+000250               PERFORM 2200-MOVER-DATOS-GENCPYO                          
+000251                  THRU 2200-MOVER-DATOS-GENCPYO-EXIT                     
+000252               PERFORM 8300-GRABAR-GENCPYO                               
+000253                  THRU 8300-GRABAR-GENCPYO-EXIT                          
+000254            END-IF                                                       
+000255                                                                         
+000256            IF ((WS-TYPE EQUAL 'BI' OR WS-TYPE EQUAL 'PD') AND           
+000257                                        (WS-PIC-SIGN = 'S'))             
+000258               PERFORM 2300-MOVER-SIGN-GENCPYO                           
+000259                  THRU 2300-MOVER-SIGN-GENCPYO-EXIT                      
+000260               PERFORM 8300-GRABAR-GENCPYO                               
+000261                  THRU 8300-GRABAR-GENCPYO-EXIT                          
+000262            END-IF                                                       
+000263                                                                         
+000264            IF ((WS-TYPE EQUAL 'BI' OR WS-TYPE EQUAL 'PD')               
+000265                   AND  (WS-PIC-SIGN EQUAL '9'))                         
+000266               PERFORM 2400-MOVER-NSIGN-GENCPYO                          
+000267                  THRU 2400-MOVER-NSIGN-GENCPYO-EXIT                     
+000268               PERFORM 8300-GRABAR-GENCPYO                               
+000269                  THRU 8300-GRABAR-GENCPYO-EXIT                          
+000270            END-IF                                                       
+000271                                                                         
+000272            PERFORM 8210-LEER-GENCPYI                                    
+000273               THRU 8210-LEER-GENCPYI-EXIT                               
+000274            .                                                            
+000275       *---------------------------------------------------------------* 
+000276        2150-PROCESAR-GENCPYI-EXIT.                                      
+000277       *---------------------------------------------------------------* 
+000278                                                                         
+000279       * MUEVE LOS DETALLES DE LOS NROS ZD Y AN A LA SALIDA.             
+000280       *---------------------------------------------------------------* 
+000281        2200-MOVER-DATOS-GENCPYO.                                        
+000282       *---------------------------------------------------------------* 
+000283            MOVE WS-ESPACIOS                TO WS-ESPACIOS-ZN            
+000284            MOVE WS-START                   TO WS-OUT-START-ZN           
+000285            MOVE WS-LENGTH                  TO WS-OUT-LENGTH-ZN          
+000286            INSPECT WS-OUT-START-ZN REPLACING ALL ' '  BY '0'            
+000287            INSPECT WS-OUT-LENGTH-ZN REPLACING ALL ' ' BY '0'            
+000288            MOVE OUTREC-ZN-AN               TO WS-REG-GENCPYI-AUX        
+000289            .                                                            
+000290       *---------------------------------------------------------------* 
+000291        2200-MOVER-DATOS-GENCPYO-EXIT.                                   
+000292       *---------------------------------------------------------------* 
+000293                                                                         
+000294       * MANEJO LOS DATOS SIGNADOS QUE SEAN BI O PD.                     
+000295       *---------------------------------------------------------------* 
+000296        2300-MOVER-SIGN-GENCPYO.                                         
+000297       *---------------------------------------------------------------* 
+000298            MOVE WS-ESPACIOS                TO WS-ESPACIOS-PD-S          
+000299            MOVE WS-TYPE                    TO WS-OUT-TYPE-SIGN-PD-S     
+000300            MOVE WS-START                   TO WS-OUT-START-PD-S         
+000301            MOVE WS-LENGTH                  TO WS-OUT-LENGTH-PD-S        
+000302                                                                         
+000303            IF (WS-TYPE EQUAL 'BI')                                      
+000304               PERFORM 2500-PROCESAR-T-BI                                
+000305                  THRU 2500-PROCESAR-T-BI-EXIT                           
+000306            END-IF                                                       
+000307                                                                         
+000308            IF (WS-TYPE EQUAL 'PD')                                      
+000309               PERFORM 2600-PROCESAR-T-PD                                
+000310                  THRU 2600-PROCESAR-T-PD-EXIT                           
+000311            END-IF                                                       
+000312                                                                         
+000313            INSPECT WS-OUT-START-PD-S  REPLACING ALL ' ' BY '0'          
+000314            INSPECT WS-OUT-LENGTH-PD-S REPLACING ALL ' ' BY '0'          
+000315            MOVE OUTREC-BI-PD-SIGN          TO WS-REG-GENCPYI-AUX        
+000316            .                                                            
+000317       *---------------------------------------------------------------* 
+000318        2300-MOVER-SIGN-GENCPYO-EXIT.                                    
+000319       *---------------------------------------------------------------* 
+000320                                                                         
+000321       *MANEJO LOS DATOS NO SIGNADOS QUE SEAN BI O PD.                   
+000322       *---------------------------------------------------------------* 
+000323        2400-MOVER-NSIGN-GENCPYO.                                        
+000324       *---------------------------------------------------------------* 
+000325                                                                         
+000326            MOVE WS-ESPACIOS                TO WS-ESPACIOS-PD-NS         
+000327            MOVE WS-TYPE                    TO WS-OUT-TYPE-SIGN-PD-NS    
+000328            MOVE WS-START                   TO WS-OUT-START-PD-NS        
+000329            MOVE WS-LENGTH                  TO WS-OUT-LENGTH-PD-NS       
+000330                                                                         
+000331            IF (WS-TYPE EQUAL 'BI')                                      
+000332               PERFORM 2500-PROCESAR-T-BI                                
+000333                  THRU 2500-PROCESAR-T-BI-EXIT                           
+000334               MOVE WS-EDIT-SIGN-BI         TO WS-EDIT-SIGN-PD-NS        
+000335            END-IF                                                       
+000336                                                                         
+000337            IF (WS-TYPE EQUAL 'PD')                                      
+000338               PERFORM 2600-PROCESAR-T-PD                                
+000339                  THRU 2600-PROCESAR-T-PD-EXIT                           
+000340               MOVE WS-EDIT-SIGN-PD         TO WS-EDIT-SIGN-PD-NS        
+000341            END-IF                                                       
+000342                                                                         
+000343            INSPECT WS-OUT-START-PD-NS  REPLACING ALL ' ' BY '0'         
+000344            INSPECT WS-OUT-LENGTH-PD-NS REPLACING ALL ' ' BY '0'         
+000345            MOVE OUTREC-BI-PD-NSIGN         TO WS-REG-GENCPYI-AUX        
+000346            .                                                            
+000347       *---------------------------------------------------------------* 
+000348        2400-MOVER-NSIGN-GENCPYO-EXIT.                                   
+000349       *---------------------------------------------------------------* 
+000350                                                                         
+000351       *IDENTIFICA LOS NROS BI Y MEDIANTE ARITMETICA RESULTA LA          
+000352       *CANTIDAD TOTAL QUE LUEGO SE GRABA EN EL ARCHIVO DE SALIDA.       
+000353       *---------------------------------------------------------------* 
+000354        2500-PROCESAR-T-BI.                                              
+000355       *---------------------------------------------------------------* 
+000356                                                                         
+000357            IF (WS-TYPE EQUAL 'BI')                                      
+000358                MULTIPLY WS-LENGTH BY 2 GIVING WS-RESULTADO              
+000359            END-IF                                                       
+000360            PERFORM 2700-PROCESAR-DECIMAL                                
+000361               THRU 2700-PROCESAR-DECIMAL-EXIT                           
+000362            .                                                            
+000363       *---------------------------------------------------------------* 
+000364        2500-PROCESAR-T-BI-EXIT.                                         
+000365       *---------------------------------------------------------------* 
+000366                                                                         
+000367       *IDENTIFICA LOS NROS PD Y MEDIANTE ARITMETICA RESULTA LA          
+000368       *CANTIDAD TOTAL QUE LUEGO SE GRABA EN EL ARCHIVO DE SALIDA.       
+000369       *---------------------------------------------------------------* 
+000370        2600-PROCESAR-T-PD.                                              
+000371       *---------------------------------------------------------------* 
+000372                                                                         
+000373            IF (WS-TYPE EQUAL 'PD')                                      
+000374                MULTIPLY WS-LENGTH BY 2 GIVING WS-RESULTADO              
+000375                SUBTRACT 1 FROM  WS-RESULTADO                            
+000376            END-IF                                                       
+000377            PERFORM 2700-PROCESAR-DECIMAL                                
+000378               THRU 2700-PROCESAR-DECIMAL-EXIT                           
+000379            .                                                            
+000380       *---------------------------------------------------------------* 
+000381        2600-PROCESAR-T-PD-EXIT.                                         
+000382       *---------------------------------------------------------------* 
+000383                                                                         
+000384       *IDENTIFICO SI LOS NROS BI O PD TIENEN DECIMALES, ASI LLAMA A     
+000385       *INSERTAR DECIMALES O NO.                                         
+000386       *---------------------------------------------------------------* 
+000387        2700-PROCESAR-DECIMAL.                                           
+000388       *---------------------------------------------------------------* 
+000389                                                                         
+000390            IF (WS-PICTURE(4:1) EQUAL 'V')                               
+000391               MOVE 4      TO  WS-INICIO-DECIM                           
+000392               PERFORM 2800-INSERTAR-DECIMAL                             
+000393                  THRU 2800-INSERTAR-DECIMAL-EXIT                        
+000394                                                                         
+000395               ELSE IF (WS-PICTURE(5:1) EQUAL 'V')                       
+000396                       MOVE 5               TO WS-INICIO-DECIM           
+000397                       PERFORM 2800-INSERTAR-DECIMAL                     
+000398                          THRU 2800-INSERTAR-DECIMAL-EXIT                
+000399                                                                         
+000400                       ELSE IF (WS-PICTURE(6:1) EQUAL 'V')               
+000401                               MOVE 6       TO WS-INICIO-DECIM           
+000402                               PERFORM 2800-INSERTAR-DECIMAL             
+000403                                  THRU 2800-INSERTAR-DECIMAL-EXIT        
+000404                                                                         
+000405                               ELSE IF (WS-PICTURE(7:1) EQUAL 'V')       
+000406                                       MOVE 7      TO WS-INICIO-DECIM    
+000407                                       PERFORM 2800-INSERTAR-DECIMAL     
+000408                                          THRU                           
+000409                                            2800-INSERTAR-DECIMAL-EXIT   
+000410                                    ELSE                                 
+000411                                    PERFORM 2820-ACOMODAR-T-SIN-DEC      
+000412                                       THRU                              
+000413                                        2820-ACOMODAR-T-SIN-DEC-EXIT     
+000414                               END-IF                                    
+000415                       END-IF                                            
+000416               END-IF                                                    
+000417            END-IF                                                       
+000418            .                                                            
+000419       *---------------------------------------------------------------* 
+000420        2700-PROCESAR-DECIMAL-EXIT.                                      
+000421       *---------------------------------------------------------------* 
+000422                                                                         
+000423       *INSERTA DECIMALES A LOS NROS QUE TIENE PARTE DECIMAL.            
+000424       *---------------------------------------------------------------* 
+000425        2800-INSERTAR-DECIMAL.                                           
+000426       *---------------------------------------------------------------* 
+000427                                                                         
+000428            ADD 2                           TO WS-INICIO-DECIM           
+000429                                                                         
+000430            IF (WS-PICTURE(WS-INICIO-DECIM:2) EQUAL '99')                
+000431               MOVE 3                       TO WS-CANT-DECIM             
+000432               PERFORM 2810-ACOMODAR-T-CON-DEC                           
+000433                  THRU 2810-ACOMODAR-T-CON-DEC-EXIT                      
+000434               ELSE IF (WS-PICTURE(WS-INICIO-DECIM:1) EQUAL ' ')         
+000435                       MOVE 1               TO WS-CANT-DECIM             
+000436                       PERFORM 2810-ACOMODAR-T-CON-DEC                   
+000437                          THRU 2810-ACOMODAR-T-CON-DEC-EXIT              
+000438                    ELSE IF (WS-PICTURE(WS-INICIO-DECIM:1) EQUAL '9')    
+000439                            MOVE 2          TO WS-CANT-DECIM             
+000440                            PERFORM 2810-ACOMODAR-T-CON-DEC              
+000441                               THRU 2810-ACOMODAR-T-CON-DEC-EXIT         
+000442                    END-IF                                               
+000443               END-IF                                                    
+000444            END-IF                                                       
+000445                                                                         
+000446            ADD 1                           TO WS-INICIO-DECIM           
+000447                                                                         
+000448            IF (WS-PICTURE(WS-INICIO-DECIM:1) EQUAL '0')                 
+000449               ADD 1                        TO WS-INICIO-DECIM           
+000450               MOVE WS-PICTURE(WS-INICIO-DECIM:1)  TO WS-CANT-DECIM      
+000451               PERFORM 2810-ACOMODAR-T-CON-DEC                           
+000452                  THRU 2810-ACOMODAR-T-CON-DEC-EXIT                      
+000453            END-IF                                                       
+000454            IF (WS-PICTURE(WS-INICIO-DECIM:1) NOT EQUAL '0')             
+000455               MOVE WS-PICTURE(WS-INICIO-DECIM:1)                        
+000456                                            TO WS-CANT-DECIM             
+000457               PERFORM 2810-ACOMODAR-T-CON-DEC                           
+000458                  THRU 2810-ACOMODAR-T-CON-DEC-EXIT                      
+000459            END-IF                                                       
+000460            .                                                            
+000461       *---------------------------------------------------------------* 
+000462        2800-INSERTAR-DECIMAL-EXIT.                                      
+000463       *---------------------------------------------------------------* 
+000464                                                                         
+000465       *ACOMODA LOS 'T' QUE SE VAN A VER EN EL EDIT DEL ARCHIVO DE       
+000466       *SALIDA, TANTO DE LOS NROS ENTEROS COMO CON PARTE DECIMAL.        
+000467       *---------------------------------------------------------------* 
+000468        2810-ACOMODAR-T-CON-DEC.                                         
+000469       *---------------------------------------------------------------* 
+000470            INITIALIZE WS-VALOR-FINAL                                    
+000471            MOVE WS-VECTOR-T(1:WS-RESULTADO) TO WS-VALOR-FINAL-AUX       
+000472                                                                         
+000473            MOVE WS-LONG-MAX-NUM-ENTERO     TO WS-LONG-MAX-NUM-AUX       
+000474            SUBTRACT WS-CANT-DECIM FROM WS-RESULTADO                     
+000475            MOVE WS-RESULTADO               TO WS-VAL-AUX-ENTERO         
+000476            SUBTRACT 1 FROM WS-VAL-AUX-ENTERO                            
+000477                                                                         
+000478            SUBTRACT WS-VAL-AUX-ENTERO FROM WS-LONG-MAX-NUM-AUX          
+000479            MOVE WS-VECTOR-T(1:WS-RESULTADO)                             
+000480                   TO VAL-FIN-ENTERO(WS-LONG-MAX-NUM-AUX:WS-RESULTADO)   
+000481                                                                         
+000482            MOVE WS-VECTOR-T(1:WS-CANT-DECIM) TO VAL-FIN-DECIM           
+000483                                                                         
+000484            MOVE '.'                        TO VAL-FIN-COMA              
+000485            MOVE WS-VALOR-FINAL             TO WS-EDIT-SIGN-PD-NS        
+000486            MOVE WS-VALOR-FINAL             TO WS-EDIT-SIGN-PD-S         
+000487            .                                                            
+000488       *---------------------------------------------------------------* 
+000489        2810-ACOMODAR-T-CON-DEC-EXIT.                                    
+000490       *---------------------------------------------------------------* 
+000491                                                                         
+000492       *ACOMODA LAS 'T' DE LOS NROS ENTEROS SIN PARTE DECIMAL.           
+000493       *---------------------------------------------------------------* 
+000494        2820-ACOMODAR-T-SIN-DEC.                                         
+000495       *---------------------------------------------------------------* 
+000496            MOVE SPACES TO WS-VALOR-FINAL                                
+000497            MOVE WS-LONG-MAX-NUM            TO WS-LONG-MAX-NUM-AUX       
+000498                                                                         
+000499            MOVE WS-RESULTADO               TO WS-VAL-AUX-ENTERO         
+000500            SUBTRACT 1 FROM WS-VAL-AUX-ENTERO                            
+000501                                                                         
+000502            SUBTRACT WS-VAL-AUX-ENTERO FROM WS-LONG-MAX-NUM-AUX          
+000503            MOVE WS-VECTOR-T(1:WS-RESULTADO)                             
+000504                   TO WS-VALOR-FINAL(WS-LONG-MAX-NUM-AUX:WS-RESULTADO)   
+000505                                                                         
+000506            MOVE WS-VALOR-FINAL             TO WS-EDIT-SIGN-PD-NS        
+000507            MOVE WS-VALOR-FINAL             TO WS-EDIT-SIGN-PD-S         
+000508            .                                                            
+000509       *---------------------------------------------------------------* 
+000510        2820-ACOMODAR-T-SIN-DEC-EXIT.                                    
+000511       *---------------------------------------------------------------* 
+000512                                                                         
+000513       *---------------------------------------------------------------* 
+000514        3000-FINALIZAR.                                                  
+000515       *---------------------------------------------------------------* 
+000516                                                                         
+000517            PERFORM 84000-CERRAR-ARCHIVOS                                
+000518            DISPLAY 'LEIDOS: ' WS-LEIDOS-GENCPYI                         
+000519            DISPLAY 'GRABAD: ' WS-GRABADOS-GENCPYO                       
+000520            DISPLAY 'JCLIN : ' WS-LEIDOS-JCLIN                           
+000521            .                                                            
+000522                                                                         
+000523       *---------------------------------------------------------------* 
+000524        3000-FINALIZAR-EXIT.                                             
+000525       *---------------------------------------------------------------* 
+000526                                                                         
+000527       *ABRE LOS ARCHIVOS DE ENTRADA, SALIDA Y JCL.                      
+000528       *---------------------------------------------------------------* 
+000529        8100-ABRIR-ARCHIVOS.                                             
+000530       *---------------------------------------------------------------* 
+000531                                                                         
+000532            OPEN INPUT  GENCPYI                                          
+000533            OPEN OUTPUT GENCPYO                                          
+000534            OPEN INPUT  JCLIN                                            
+000535            .                                                            
+000536       *---------------------------------------------------------------* 
+000537        8100-ABRIR-ARCHIVOS-EXIT.                                        
+000538       *---------------------------------------------------------------* 
+000539                                                                         
+000540       *LEE EL JCL DE ENTRADA QUE ES LA CABECERA DEL ARCHIVO DE SALIDA.  
+000541       *---------------------------------------------------------------* 
+000542        8200-LEER-JCLIN.                                                 
+000543       *---------------------------------------------------------------* 
+000544                                                                         
+000545            READ JCLIN                                                   
+000546                 AT END                                                  
+000547                    SET EOF-JCLIN           TO TRUE                      
+000548                 NOT AT END                                              
+000549                    ADD 1                   TO WS-LEIDOS-JCLIN           
+000550            END-READ                                                     
+000551            .                                                            
+000552       *---------------------------------------------------------------* 
+000553        8200-LEER-JCLIN-EXIT.                                            
+000554       *---------------------------------------------------------------* 
+000555                                                                         
+000556       *LEE EL ARCHIVO DE ENTRADA.                                       
+000557       *---------------------------------------------------------------* 
+000558        8210-LEER-GENCPYI.                                               
+000559       *---------------------------------------------------------------* 
+000560                                                                         
+000561            READ GENCPYI                                                 
+000562                 AT END                                                  
+000563                    SET EOF-GENCPYI         TO TRUE                      
+000564                 NOT AT END                                              
+000565                    ADD 1                   TO WS-LEIDOS-GENCPYI         
+000566            END-READ                                                     
+000567            .                                                            
+000568       *---------------------------------------------------------------* 
+000569        8210-LEER-GENCPYI-EXIT.                                          
+000570       *---------------------------------------------------------------* 
+000571                                                                         
+000572       *GUARDA LOS DATOS DE ENTRADA NECESARIOS EN LA WS.                 
+000573       *---------------------------------------------------------------* 
+000574        8250-GUARDAR-VARIABLES.                                          
+000575       *---------------------------------------------------------------* 
+000576                                                                         
+000577            MOVE  REG-GENCPYI(56:1)         TO WS-PIC-SIGN               
+000578            MOVE  REG-GENCPYI(57:1)         TO WS-PIC                    
+000579            MOVE  REG-GENCPYI(68:2)         TO WS-TYPE                   
+000580            MOVE  REG-GENCPYI(74:3)         TO WS-START                  
+000581            MOVE  REG-GENCPYI(88:3)         TO WS-LENGTH                 
+000582            MOVE  REG-GENCPYI(56:11)        TO WS-PICTURE                
+000583            .                                                            
+000584       *---------------------------------------------------------------* 
+000585        8250-GUARDAR-VARIABLES-EXIT.                                     
+000586       *---------------------------------------------------------------* 
+000587                                                                         
+000588       * GRABA LA SALIDA.                                                
+000589       *---------------------------------------------------------------* 
+000590        8300-GRABAR-GENCPYO.                                             
+000591       *---------------------------------------------------------------* 
+000592            IF (WS-GRABADOS-GENCPYO EQUAL 0)                             
+000593               MOVE ' '                     TO WS-REG-GENCPYI-AUX(19:1)  
+000594            END-IF                                                       
+000595                                                                         
+000596            WRITE REG-GENCPYO       FROM  WS-REG-GENCPYI-AUX             
+000597                                                                         
+000598            ADD 1                           TO WS-GRABADOS-GENCPYO       
+000599            .                                                            
+000600       *---------------------------------------------------------------* 
+000601        8300-GRABAR-GENCPYO-EXIT.                                        
+000602       *---------------------------------------------------------------* 
+000603                                                                         
+000604       *CIERRA ARCHIVOS DE ENTRADA, SALIDA Y JCL DE ENTRADA.             
+000605       *---------------------------------------------------------------* 
+000606        84000-CERRAR-ARCHIVOS.                                           
+000607       *---------------------------------------------------------------* 
+000608            CLOSE GENCPYI                                                
+000609            CLOSE GENCPYO                                                
+000610            CLOSE JCLIN                                                  
+000611            .                                                            
+000612       *---------------------------------------------------------------* 
+000613        84000-CERRAR-ARCHIVOS-EXIT.                                      
+000614       *---------------------------------------------------------------* 
+000615       *---------------------------------------------------------------* 
+000616                                                                         
